@@ -1,25 +1,35 @@
-# STM32 Bare-Metal Blink
+# SysTick Blink
 
-Bare-metal LED blink on STM32F446RE. No HAL, no CubeIDE.
-Direct register manipulation using the reference manual.
+Precise millisecond LED blink using the Cortex-M4 SysTick timer.
+Replaces the busy-wait delay from the first blink project with an
+accurate interrupt-driven millisecond counter.
 
-## How it works
-- RCC_AHB1ENR enables GPIOA clock (required before any GPIO access)
-- GPIOA_MODER sets PA5 as output (bits 11:10 = 01)
-- GPIOA_ODR toggles PA5 HIGH and LOW in a loop
-- Delay is a busy-wait loop (SysTick comes later)
+## How It Works
+SysTick is configured to fire every 1ms at 16MHz (reload = 15999).
+The SysTick_Handler ISR increments a volatile tick counter.
+delay_ms() compares the current tick against a start value to
+create a non-blocking style delay.
 
-## Concepts demonstrated
-- Clock gating via RCC (unique to STM32, not needed on AVR)
-- GPIO MODER 2-bit mode configuration
-- Bare-metal register access via memory-mapped addresses
-- Linker script (flash/RAM memory regions)
-- Startup file (vector table, data/bss init, Reset_Handler)
+## Peripherals Used
+- **SysTick** — Cortex-M4 system timer, interrupt every 1ms
+- **RCC** — clock enable for GPIOA
+- **GPIO** — PA5 output (onboard LED LD2)
 
-## Setup
-- STM32F446RE Nucleo-64
-- Built-in green LED on PA5
-- arm-none-eabi-gcc + st-flash on macOS
+## Key Concepts
+- SYST_RVR = (F_CPU / 1000) - 1 = 15999 for 1ms at 16MHz
+- SYST_CVR cleared to 0 to start counting immediately
+- SYST_CSR bits: ENABLE(0), TICKINT(1), CLKSOURCE(2) all set to 1
+- tick declared volatile — modified in ISR, read in main
+- SysTick vector is position 15 in the vector table
+
+## Wiring
+Onboard only.
+- LED — PA5 (LD2, green onboard LED)
+
+## Built With
+- arm-none-eabi-gcc
+- st-flash
+- Cortex-M4 Generic User Guide — SysTick register descriptions
 
 ## Flash
 make flash

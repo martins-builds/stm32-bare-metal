@@ -7,8 +7,9 @@ No HAL, no CubeIDE, no abstractions. Direct register manipulation only.
 
 | Project | Description | Peripherals |
 |---------|-------------|-------------|
-| [blink](./blink/) | LED blink via direct register access | RCC, GPIO |
+| [blink](./blink/) | LED blink with busy-wait delay | RCC, GPIO |
 | [gpio-input](./gpio-input/) | Button interrupt toggles LED | RCC, GPIO, SYSCFG, EXTI, NVIC |
+| [systick](./systick) | Precise 1ms blink using SysTick timer | RCC, GPIO, SysTick |
 
 ## Toolchain
 - arm-none-eabi-gcc
@@ -22,6 +23,7 @@ No HAL, no CubeIDE, no abstractions. Direct register manipulation only.
 - Linker script and startup file written manually
 - 32-bit registers, Cortex-M4 architecture with NVIC interrupt controller
 - SYSCFG required to route GPIO pins to EXTI lines
+- SysTick is a Cortex-M4 core peripheral — no RCC gating needed
 
 ## Flash Any Project
 cd <project-folder>
