@@ -9,8 +9,6 @@ void SysTick_Handler(void);
 
 void main(void);
 
-void EXTI15_10_IRQHandler(void);
-
 void Reset_Handler(void) {
     // copy .data from flash to RAM
     uint32_t *src = &_sidata;
@@ -87,5 +85,5 @@ void (*const vector_table[])(void) = {
     Default_Handler,          // 53
     Default_Handler,          // 54
     Default_Handler,          // 55
-    EXTI15_10_IRQHandler,     // 56 — IRQ40
+    Default_Handler,     // 56 — IRQ40
 };
