@@ -42,7 +42,7 @@ void delay_ms(uint32_t ms){
 //start of usart2
 void usart_init(void){
     RCC_APB1ENR |= (1 << 17);  // USART2EN
-    USART_BRR = (1666 << 4) | 0xA;
+    USART_BRR = 16000000 / 9600;
     USART_CR1 = (1 << 13) | (1 << 3) | (1 << 2);  // UE, TE, RE
 }
 void usart_send(char data){
@@ -79,7 +79,6 @@ void usart_print_number(uint16_t num){
 
 __attribute__((used)) void main(void){
     systick_init();
-    usart_init();
 
     // enable GPIOA clock
     RCC_AHB1ENR |= (1 << 0);
@@ -94,6 +93,8 @@ __attribute__((used)) void main(void){
     GPIOA_AFRL |= (7 << 8);   // PA2 = AF7
     GPIOA_AFRL |= (7 << 12);  // PA3 = AF7
 
+    usart_init();
+    
     while(1){
         usart_print("Hello from STM32\r\n");
         delay_ms(1000);
