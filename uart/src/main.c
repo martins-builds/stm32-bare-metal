@@ -42,7 +42,7 @@ void delay_ms(uint32_t ms){
 //start of usart2
 void usart_init(void){
     RCC_APB1ENR |= (1 << 17);  // USART2EN
-    USART_BRR = 16000000 / 9600;
+    USART_BRR = (1666 << 4) | 0xA;
     USART_CR1 = (1 << 13) | (1 << 3) | (1 << 2);  // UE, TE, RE
 }
 void usart_send(char data){
