@@ -44,7 +44,7 @@ void (*const vector_table[])(void) = {
     Default_Handler,          // 12
     Default_Handler,          // 13
     Default_Handler,          // 14
-    SysTick_Handler,          // 15
+    SysTick_Handler,          // 15 - SysTick
     Default_Handler,          // 16 — IRQ0
     Default_Handler,          // 17 — IRQ1
     Default_Handler,          // 18

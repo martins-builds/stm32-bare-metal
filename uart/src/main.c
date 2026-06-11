@@ -15,7 +15,7 @@
 #define GPIOA_AFRL   (*(volatile uint32_t*)(GPIOA_BASE + 0x20))
 
 //USART
-#define RCC_APB1ENR  (*(volatile uint32_t*)(RCC_BASE + 0x40))
+#define RCC_APB1ENR  (*(volatile uint32_t*)(RCC_BASE    + 0x40))
 #define USART_SR     (*(volatile uint32_t*)(USART2_BASE + 0x00))
 #define USART_DR     (*(volatile uint32_t*)(USART2_BASE + 0x04))
 #define USART_CR1    (*(volatile uint32_t*)(USART2_BASE + 0x0C))

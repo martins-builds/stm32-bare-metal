@@ -1,35 +1,40 @@
-# SysTick Blink
+# UART
 
-Precise millisecond LED blink using the Cortex-M4 SysTick timer.
-Replaces the busy-wait delay from the first blink project with an
-accurate interrupt-driven millisecond counter.
+USART2 transmit and receive over serial at 9600 baud.
+No HAL — direct register manipulation only.
 
 ## How It Works
-SysTick is configured to fire every 1ms at 16MHz (reload = 15999).
-The SysTick_Handler ISR increments a volatile tick counter.
-delay_ms() compares the current tick against a start value to
-create a non-blocking style delay.
+USART2 is configured on PA2 (TX) and PA3 (RX) using GPIO alternate
+function 7. Prints "Hello from STM32" every second using SysTick
+for timing.
 
 ## Peripherals Used
-- **SysTick** — Cortex-M4 system timer, interrupt every 1ms
-- **RCC** — clock enable for GPIOA
-- **GPIO** — PA5 output (onboard LED LD2)
+- **RCC** — clock enable for GPIOA (AHB1) and USART2 (APB1)
+- **GPIO** — PA2 and PA3 in alternate function mode (AF7)
+- **USART2** — 9600 baud, transmit and receive
+- **SysTick** — 1ms interrupt-driven delay
 
 ## Key Concepts
-- SYST_RVR = (F_CPU / 1000) - 1 = 15999 for 1ms at 16MHz
-- SYST_CVR cleared to 0 to start counting immediately
-- SYST_CSR bits: ENABLE(0), TICKINT(1), CLKSOURCE(2) all set to 1
-- tick declared volatile — modified in ISR, read in main
-- SysTick vector is position 15 in the vector table
+- GPIOA_MODER bits set to 10 for alternate function mode
+- GPIOA_AFRL bits 11:8 = 0111 (AF7) for PA2, bits 15:12 = 0111 for PA3
+- USART_BRR = F_CPU / baud = 16000000 / 9600 = 1666
+- USART_CR1: UE(13), TE(3), RE(2) to enable USART, TX and RX
+- Poll TXE (bit 7) in SR before writing to DR
+- Poll RXNE (bit 5) in SR before reading from DR
 
 ## Wiring
-Onboard only.
-- LED — PA5 (LD2, green onboard LED)
+Onboard only — Nucleo ST-Link bridges USART2 to USB automatically.
+- TX — PA2
+- RX — PA3
+
+## View Output
+screen /dev/tty.usbmodem14103 9600
+To exit screen: Ctrl+A then K
+
+## Flash
+make flash
 
 ## Built With
 - arm-none-eabi-gcc
 - st-flash
-- Cortex-M4 Generic User Guide — SysTick register descriptions
-
-## Flash
-make flash
+- STM32F446RE reference manual (RM0390)
