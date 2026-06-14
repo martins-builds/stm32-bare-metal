@@ -84,6 +84,7 @@ void usart_print_number(uint16_t num){
 
 void clock_init(){
     FLASH_ACR |= (5 << 0);
+    FLASH_ACR |= (1 << 8) | (1 << 9) | (1 << 10);
     RCC_CR |= (1 << 16);
     while(!(RCC_CR & (1 << 17)));  // wait until bit 17 becomes 1
     RCC_PLLCFGR = (1 << 22) | (8 << 0) | (360 << 6) | (0 << 16);
