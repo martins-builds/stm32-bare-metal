@@ -165,9 +165,3 @@ __attribute__((used)) void main(void){
         delay_ms(1000);
     }
 }
-i need a readme and it should have 
-TIM2 PWM mode 1, PA0 AF1
-PSC=89, ARR=19999 giving 50Hz at 90MHz timer clock
-CCR1 formula for angle to pulse width
-PLL running at 180MHz, TIM2 on APB1 timer clock (90MHz)
-Wiring — servo to PA0, 5V, GND
