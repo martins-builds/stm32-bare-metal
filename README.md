@@ -12,6 +12,8 @@ No HAL, no CubeIDE, no abstractions. Direct register manipulation only.
 | [systick](./systick) | Precise 1ms blink using SysTick timer | RCC, GPIO, SysTick |
 | [uart](./uart/) | USART2 serial transmit and receive | RCC, GPIO, USART2, SysTick |
 | [PLL](./PLL/) | USART2 serial transmit and receive at 180MHz via PLL | RCC, FLASH, GPIO, USART2, SysTick |
+[pwm-servo](./pwm-servo/) | Servo control via TIM2 PWM at 50Hz | RCC, FLASH, GPIO, TIM2, USART2, SysTick |
+
 
 ## Toolchain
 - arm-none-eabi-gcc

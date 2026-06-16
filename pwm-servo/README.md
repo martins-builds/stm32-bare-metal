@@ -1,73 +1,86 @@
-# UART + PLL
+# PWM Servo
 
-USART2 transmit and receive over serial at 9600 baud, running at 180MHz
-system clock via PLL. No HAL — direct register manipulation only.
+TIM2 PWM output on PA0 controlling a servo motor at 50Hz.
+No HAL — direct register manipulation only.
 
 ## How It Works
 
-### Clock Chain: HSE → PLL → SYSCLK
+### Clock Chain: HSE → PLL → SYSCLK → TIM2
 
-The STM32F446RE boots from the internal HSI oscillator at 16MHz.
-This project switches to the external HSE oscillator (8MHz on the Nucleo)
-and feeds it through the PLL to reach 180MHz SYSCLK.
+The system runs at 180MHz via PLL from the 8MHz HSE oscillator.
+TIM2 sits on APB1 which runs at 45MHz, but APB1 timers receive
+a ×2 multiplier when the APB prescaler is not /1, giving TIM2
+a 90MHz clock.
+HSE (8MHz) → ÷8 → ×360 → ÷2 → SYSCLK 180MHz
 
-The PLL has three dividers that control this chain:
-HSE (8MHz) → ÷M → PLL input → ×N → VCO → ÷P → SYSCLK
+→ AHB /1  → 180MHz
 
-8MHz → ÷8 → 1MHz  → ×360 → 360MHz → ÷2 → 180MHz
-| Divider | Value | Purpose |
-|---------|-------|---------|
-| M | 8 | Scales HSE down to 1MHz for PLL input |
-| N | 360 | Multiplies up to 360MHz VCO frequency |
-| P | 2 | Divides VCO down to 180MHz SYSCLK |
+→ APB1 /4 → 45MHz → TIM2 ×2 → 90MHz
 
-### Bus Prescalers
+### PWM Frequency: 50Hz
 
-AHB, APB1 and APB2 each have separate prescalers set in RCC_CFGR:
+Servos require a 50Hz PWM signal — one pulse every 20ms.
+TIM2 is configured with:
 
-| Bus | Prescaler | Speed | Constraint |
-|-----|-----------|-------|------------|
-| AHB | /1 | 180MHz | Max 180MHz |
-| APB1 | /4 | 45MHz | Max 45MHz |
-| APB2 | /2 | 90MHz | Max 90MHz |
+| Register | Value | Purpose |
+|----------|-------|---------|
+| PSC | 89 | Prescaler: 90MHz / 90 = 1MHz timer tick |
+| ARR | 19999 | Period: 1MHz / 20000 = 50Hz |
+| CCR1 | variable | Pulse width → servo angle |
 
-USART2 sits on APB1, so its clock is 45MHz. BRR is calculated as:
-`USART_BRR = 45000000 / 9600 = 4687`
+Timer tick = 90MHz / (PSC+1) = 90MHz / 90 = 1MHz = 1µs per tick
 
-### Flash Latency
+Period     = (ARR+1) ticks   = 20000µs = 20ms = 50Hz
 
-At 180MHz the CPU fetches instructions faster than flash can serve them.
-Flash latency must be set to 5 wait states before switching to PLL —
-if done after, the CPU outruns flash and executes garbage. Instruction
-cache, data cache and prefetch are also enabled to recover lost cycles
-from the wait states.
+### Angle to Pulse Width
 
-### USART2 Configuration
+Standard servo protocol:
+- 1ms pulse = 0°
+- 1.5ms pulse = 90°
+- 2ms pulse = 180°
 
-Configured on PA2 (TX) and PA3 (RX) using GPIO alternate function 7.
-Prints "Hello from STM32" every second using SysTick for timing.
+CCR1 formula:
+CCR1 = 1000 + (angle × 1000 / 180)
+
+| Angle | CCR1 | Pulse Width |
+|-------|------|-------------|
+| 0°    | 1000 | 1.0ms |
+| 90°   | 1500 | 1.5ms |
+| 180°  | 2000 | 2.0ms |
+
+### TIM2 PWM Mode 1
+
+PWM Mode 1 (OC1M = 110): output is high while TIM2_CNT < CCR1,
+low otherwise. Configured on channel 1 (PA0, AF1).
+
+- CCMR1 bits 6:4 = 110 (PWM Mode 1)
+- CCER bit 0 = 1 (CC1E, channel 1 output enable)
+- CR1 bit 7 = 1 (ARPE, auto-reload preload enable)
+- EGR bit 0 = 1 (UG, update event to latch PSC and ARR)
 
 ## Peripherals Used
-- **RCC** — PLL configuration, clock enable for GPIOA and USART2
-- **FLASH** — wait state and cache configuration
-- **GPIO** — PA2 and PA3 in alternate function mode (AF7)
-- **USART2** — 9600 baud, transmit and receive on APB1 at 45MHz
-- **SysTick** — 1ms interrupt-driven delay, reload = 180000000/1000 - 1
-
-## Key Concepts
-- Flash latency must be set BEFORE switching SYSCLK to PLL
-- SWS bits (3:2) in RCC_CFGR confirm the clock switch completed
-- VCO frequency must stay between 100-432MHz (360MHz here)
-- PLL input after M divider should be 1-2MHz (1MHz here)
-- APB1 max 45MHz, APB2 max 90MHz per F446RE datasheet
+- **RCC** — PLL config, GPIOA (AHB1), TIM2 and USART2 (APB1)
+- **FLASH** — 5 wait states, instruction cache, data cache, prefetch
+- **GPIO** — PA0 AF1 (TIM2_CH1), PA2 AF7 (USART2 TX), PA3 AF7 (USART2 RX)
+- **TIM2** — 50Hz PWM output on channel 1
+- **USART2** — 9600 baud serial debug output
+- **SysTick** — 1ms interrupt-driven delay
 
 ## Wiring
-Onboard only — Nucleo ST-Link bridges USART2 to USB automatically.
-- TX — PA2
-- RX — PA3
+
+| Servo Wire | Connect To |
+|------------|------------|
+| Signal (orange/yellow) | PA0 |
+| Power (red) | 5V |
+| Ground (brown/black) | GND |
+
+> ⚠️ Power the servo from the Nucleo 5V pin or an external 5V supply.
+> Do not power it from 3.3V — servos require 5V and draw more current
+> than the STM32 can safely provide directly.
 
 ## View Output
 screen /dev/tty.usbmodem14103 9600
+
 To exit screen: Ctrl+A then K
 
 ## Flash
