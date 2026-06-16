@@ -111,7 +111,7 @@ void clock_init(){
     RCC_CFGR = (0 << 4) | (5 << 10) | (4 << 13);
     RCC_CFGR |= (2 << 0);
     timeout = 100000;
-    while(!(RCC_CFGR & (2 << 2)) && timeout--);
+    while(((RCC_CFGR & (0x3 << 2)) != (0x2 << 2)) && timeout--);
 }
 
 //TIMER-FUNCTIONS
@@ -165,3 +165,9 @@ __attribute__((used)) void main(void){
         delay_ms(1000);
     }
 }
+i need a readme and it should have 
+TIM2 PWM mode 1, PA0 AF1
+PSC=89, ARR=19999 giving 50Hz at 90MHz timer clock
+CCR1 formula for angle to pulse width
+PLL running at 180MHz, TIM2 on APB1 timer clock (90MHz)
+Wiring — servo to PA0, 5V, GND
