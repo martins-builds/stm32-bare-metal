@@ -153,10 +153,10 @@ void i2c_write_addr(uint8_t addr){
 }
 void i2c_write_byte(uint8_t data){
     I2C_DR = data;
-    while(!(I2C_SR1 & (1 << 2)));
+    while(!(I2C_SR1 & (1 << 7)));
 }
 void i2c_stop(){
-
+    while(!(I2C_SR1 & (1 << 2)));
     I2C_CR1 |= (1 << 9);
 }
 
