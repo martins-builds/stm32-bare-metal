@@ -145,12 +145,19 @@ void i2c_start(){
     while(!(I2C_SR1 & (1 << 0)));
 }
 void i2c_write_addr(uint8_t addr){
-    I2C_SR1 |= (1 << 0);
-    I2C_DR = addr;
+    I2C_DR = (addr << 1);
     while(!(I2C_SR1 & (1 << 1)));
     volatile uint32_t tmp = I2C_SR1;
     tmp = I2C_SR2;
     (void)tmp;
+}
+void i2c_write_byte(uint8_t data){
+    I2C_DR = data;
+    while(!(I2C_SR1 & (1 << 2)));
+}
+void i2c_stop(){
+
+    I2C_CR1 |= (1 << 9);
 }
 
 __attribute__((used)) void main(void){
