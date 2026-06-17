@@ -134,17 +134,24 @@ void i2c_init(){
     GPIOB_AFRH &= ~(0xF << 12);  // clear PB11's 4 bits
     GPIOB_AFRH |=  (4   << 12);  // set AF4
 
-    I2C_CR1 |= (1 << 0);
     I2C_CR2 = 45;
     I2C_CCR = 225;
     I2C_TRISE = 46;
+    I2C_CR1 |= (1 << 0);
 }
 
 void i2c_start(){
     I2C_CR1 |= (1 << 8);
     while(!(I2C_SR1 & (1 << 0)));
 }
-
+void i2c_write_addr(uint8_t addr){
+    I2C_SR1 |= (1 << 0);
+    I2C_DR = addr;
+    while(!(I2C_SR1 & (1 << 1)));
+    volatile uint32_t tmp = I2C_SR1;
+    tmp = I2C_SR2;
+    (void)tmp;
+}
 
 __attribute__((used)) void main(void){
     clock_init();
