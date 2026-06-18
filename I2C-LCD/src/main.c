@@ -9,6 +9,8 @@
 #define USART2_BASE  0x40004400
 #define I2C_BASE     0x40005400
 #define GPIOB_BASE   0x40020400
+#define LCD_ADDR     0x27
+#define LCD_BL       0x08  // backlight bit
 
 //PINS
 #define RCC_AHB1ENR  (*(volatile uint32_t*)(RCC_BASE   + 0x30))
@@ -161,23 +163,63 @@ void i2c_stop(void){
 }
 void pcf8574_write(uint8_t data){
     i2c_start();
-    i2c_write_addr(0x27);
+    i2c_write_addr(LCD_ADDR);
     i2c_write_byte(data);
     i2c_stop();
 }
 
 //lcd functions
-void lcd_init(){
-
+void lcd_send_byte(uint8_t data){
+    i2c_start();
+    i2c_write_addr(LCD_ADDR << 1);  // address + write bit
+    i2c_write_addr(data | LCD_BL);  // send with backlight on
+    i2c_stop();
 }
-void lcd_send_nibble(){
-
+void lcd_pulse_enable(uint8_t data){
+    lcd_send_byte(data | 0x04);   // EN high
+    delay_ms(0.001);
+    lcd_send_byte(data & ~0x04);  // EN low
+    delay_ms(0.001);
 }
-void lcd_send_byte(){
-
+void lcd_send_nibble(uint8_t nibble, uint8_t rs){
+    uint8_t data = (nibble & 0xF0) | LCD_BL | rs;
+    lcd_pulse_enable(data);
 }
-void lcd_print(){
-    
+void lcd_send_cmd(uint8_t cmd){
+    lcd_send_nibble(cmd & 0xF0, 0x00);        // high nibble, RS=0
+    lcd_send_nibble((cmd << 4) & 0xF0, 0x00); // low nibble, RS=0
+}
+void lcd_send_char(uint8_t ch){
+    lcd_send_nibble(ch & 0xF0, 0x01);        // high nibble, RS=1
+    lcd_send_nibble((ch << 4) & 0xF0, 0x01); // low nibble, RS=1
+}
+void lcd_init(void){
+    delay_ms(50);              // wait for LCD power up
+
+    // special initialization sequence - 4-bit mode
+    lcd_send_nibble(0x30, 0);   // function set
+    delay_ms(5);
+    lcd_send_nibble(0x30, 0);   // function set
+    delay_ms(0.15);
+    lcd_send_nibble(0x30, 0);   // function set
+    delay_ms(0.15);
+    lcd_send_nibble(0x20, 0);   // switch to 4-bit mode
+
+    // now in 4-bit mode - configure
+    lcd_send_cmd(0x28);  // 2 lines, 5x8 font
+    lcd_send_cmd(0x0C);  // display on, cursor off
+    lcd_send_cmd(0x06);  // entry mode - increment cursor
+    lcd_send_cmd(0x01);  // clear display
+    delay_ms(2);        // clear needs extra time
+}
+void lcd_print(const char *str){
+    while(*str){
+        lcd_send_char(*str++);
+    }
+}
+void lcd_set_cursor(uint8_t row, uint8_t col){
+    uint8_t addr = (row == 0) ? 0x80 + col : 0xC0 + col;
+    lcd_send_cmd(addr);
 }
 
 __attribute__((used)) void main(void){
