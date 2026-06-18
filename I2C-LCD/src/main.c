@@ -100,7 +100,7 @@ void usart_print_number(uint16_t num){
 }
 
 //clock function
-void clock_init(){
+void clock_init(void){
     FLASH_ACR |= (5 << 0);
     FLASH_ACR |= (1 << 8) | (1 << 9) | (1 << 10);
     RCC_CR |= (1 << 16);
@@ -114,7 +114,7 @@ void clock_init(){
 }
 
 //I2C function
-void i2c_init(){
+void i2c_init(void){
     // GPIOB clock
     RCC_AHB1ENR |= (1 << 1);
     RCC_APB1ENR |= (1 << 21);
@@ -140,7 +140,7 @@ void i2c_init(){
     I2C_CR1 |= (1 << 0);
 }
 
-void i2c_start(){
+void i2c_start(void){
     I2C_CR1 |= (1 << 8);
     while(!(I2C_SR1 & (1 << 0)));
 }
@@ -155,9 +155,29 @@ void i2c_write_byte(uint8_t data){
     I2C_DR = data;
     while(!(I2C_SR1 & (1 << 7)));
 }
-void i2c_stop(){
+void i2c_stop(void){
     while(!(I2C_SR1 & (1 << 2)));
     I2C_CR1 |= (1 << 9);
+}
+void pcf8574_write(uint8_t data){
+    i2c_start();
+    i2c_write_addr(0x27);
+    i2c_write_byte(data);
+    i2c_stop();
+}
+
+//lcd functions
+void lcd_init(){
+
+}
+void lcd_send_nibble(){
+
+}
+void lcd_send_byte(){
+
+}
+void lcd_print(){
+    
 }
 
 __attribute__((used)) void main(void){
