@@ -261,5 +261,7 @@ __attribute__((used)) void main(void){
     usart_init();
     i2c_init();
     lcd_init();
-    lcd_print("I am alive");
+    lcd_print("Martins Builds");
+    lcd_set_cursor(1, 0);
+    lcd_print("Embedded Eng");
 }
