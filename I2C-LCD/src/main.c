@@ -46,6 +46,24 @@
 #define I2C_SR2    (*(volatile uint32_t*)(I2C_BASE + 0x18))
 #define I2C_OAR1   (*(volatile uint32_t*)(I2C_BASE + 0x08))
 
+
+#define DWT_CTRL   (*(volatile uint32_t*)0xE0001000)
+#define DWT_CYCCNT (*(volatile uint32_t*)0xE0001004)
+#define DEMCR      (*(volatile uint32_t*)0xE000EDFC)
+
+void dwt_init(void){
+    DEMCR |= (1 << 24);     // enable trace
+    DWT_CTRL |= (1 << 0);   // enable cycle counter
+    DWT_CYCCNT = 0;
+}
+
+void delay_us(uint32_t us){
+    uint32_t start = DWT_CYCCNT;
+    uint32_t cycles = us * 180;
+    while((DWT_CYCCNT - start) < cycles);
+}
+
+
 //start of SysTick
 volatile uint32_t tick = 0;
 
@@ -121,20 +139,20 @@ void i2c_init(void){
     RCC_AHB1ENR |= (1 << 1);
     RCC_APB1ENR |= (1 << 21);
 
-    // PB10 and PB11 alternate function mode (10)
-    GPIOB_MODER |= (1 << 21) | (1 << 23);
-    GPIOB_MODER &= ~((1 << 20) | (1 << 22));
+    // PB8 and PB9 alternate function mode (10)
+    GPIOB_MODER |= (1 << 17) | (1 << 19);
+    GPIOB_MODER &= ~((1 << 16) | (1 << 18));
 
     // open-drain
-    GPIOB_OTYPER |= (1 << 10) | (1 << 11);
+    GPIOB_OTYPER |= (1 << 8) | (1 << 9);
 
     // high speed
-    GPIOB_OSPEEDR |= (1 << 21) | (1 << 20) | (1 << 23) | (1 << 22);
+    GPIOB_OSPEEDR |= (1 << 17) | (1 << 16) | (1 << 19) | (1 << 18);
 
-    GPIOB_AFRH &= ~(0xF << 8);   // clear PB10's 4 bits
-    GPIOB_AFRH |=  (4   << 8);   // set AF4
-    GPIOB_AFRH &= ~(0xF << 12);  // clear PB11's 4 bits
-    GPIOB_AFRH |=  (4   << 12);  // set AF4
+    GPIOB_AFRH &= ~(0xF << 0);   // clear PB8's 4 bits
+    GPIOB_AFRH |=  (4   << 0);   // set AF4
+    GPIOB_AFRH &= ~(0xF << 4);  // clear PB9's 4 bits
+    GPIOB_AFRH |=  (4   << 4);  // set AF4
 
     I2C_CR2 = 45;
     I2C_CCR = 225;
@@ -171,15 +189,15 @@ void pcf8574_write(uint8_t data){
 //lcd functions
 void lcd_send_byte(uint8_t data){
     i2c_start();
-    i2c_write_addr(LCD_ADDR << 1);  // address + write bit
-    i2c_write_addr(data | LCD_BL);  // send with backlight on
+    i2c_write_addr(LCD_ADDR);
+    i2c_write_byte(data | LCD_BL);
     i2c_stop();
 }
 void lcd_pulse_enable(uint8_t data){
     lcd_send_byte(data | 0x04);   // EN high
-    delay_ms(0.001);
+    delay_us(1);
     lcd_send_byte(data & ~0x04);  // EN low
-    delay_ms(0.001);
+    delay_us(1);
 }
 void lcd_send_nibble(uint8_t nibble, uint8_t rs){
     uint8_t data = (nibble & 0xF0) | LCD_BL | rs;
@@ -200,9 +218,9 @@ void lcd_init(void){
     lcd_send_nibble(0x30, 0);   // function set
     delay_ms(5);
     lcd_send_nibble(0x30, 0);   // function set
-    delay_ms(0.15);
+    delay_us(150);
     lcd_send_nibble(0x30, 0);   // function set
-    delay_ms(0.15);
+    delay_us(150);
     lcd_send_nibble(0x20, 0);   // switch to 4-bit mode
 
     // now in 4-bit mode - configure
@@ -225,6 +243,7 @@ void lcd_set_cursor(uint8_t row, uint8_t col){
 __attribute__((used)) void main(void){
     clock_init();
     systick_init();
+    dwt_init();
 
     // enable GPIOA clock
     RCC_AHB1ENR |= (1 << 0);
@@ -240,9 +259,7 @@ __attribute__((used)) void main(void){
     GPIOA_AFRL |= (7 << 12);  // PA3 = AF7
 
     usart_init();
-    
-    while(1){
-        usart_print("Hello from STM32\r\n");
-        delay_ms(1000);
-    }
+    i2c_init();
+    lcd_init();
+    lcd_print("I am alive");
 }
