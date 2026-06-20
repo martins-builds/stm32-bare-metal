@@ -50,14 +50,15 @@
 #define I2C_OAR1   (*(volatile uint32_t*)(I2C_BASE + 0x08))
 
 //ADC
-#define ADC1_CR1   (*(volatile uint32_t*)(ADC1_BASE + 0x04))
-#define ADC1_CR2   (*(volatile uint32_t*)(ADC1_BASE + 0x08))
-#define ADC1_SQR3  (*(volatile uint32_t*)(ADC1_BASE + 0x34))
-#define ADC1_DR    (*(volatile uint32_t*)(ADC1_BASE + 0x4C))
-#define ADC_SMPR2  (*(volatile uint32_t*)(ADC1_BASE + 0x10))
-#define ADC_SR     (*(volatile uint32_t*)(ADC1_BASE + 0x00))
+#define RCC_APB2ENR  (*(volatile uint32_t*)(RCC_BASE  + 0x44))
+#define ADC1_CR1     (*(volatile uint32_t*)(ADC1_BASE + 0x04))
+#define ADC1_CR2     (*(volatile uint32_t*)(ADC1_BASE + 0x08))
+#define ADC1_SQR3    (*(volatile uint32_t*)(ADC1_BASE + 0x34))
+#define ADC1_DR      (*(volatile uint32_t*)(ADC1_BASE + 0x4C))
+#define ADC1_SMPR2    (*(volatile uint32_t*)(ADC1_BASE + 0x10))
+#define ADC1_SR       (*(volatile uint32_t*)(ADC1_BASE + 0x00))
 
-#define ADC_CCR    (*(volatile uint32_t*)(ADC_COMMON_BASE + 0x04))
+#define ADC_CCR      (*(volatile uint32_t*)(ADC_COMMON_BASE + 0x04))
 
 
 #define DWT_CTRL   (*(volatile uint32_t*)0xE0001000)
@@ -251,6 +252,27 @@ void lcd_print(const char *str){
 void lcd_set_cursor(uint8_t row, uint8_t col){
     uint8_t addr = (row == 0) ? 0x80 + col : 0xC0 + col;
     lcd_send_cmd(addr);
+}
+
+//ADC functions
+void adc_init(void){
+    //clocks
+    RCC_APB2ENR |= (1 << 8);
+    RCC_AHB1ENR |= (1 << 0);
+
+    GPIOA_MODER = (1 << 0) | (1 << 1);
+
+    //12 bit resolution
+    ADC1_CR1 &= ~(1 << 25);
+    ADC1_CR1 &= ~(1 << 24);
+
+    ADC1_CR2 &= ~(1 << 0);
+    ADC1_SMPR2 |= (0 << 0);
+
+    ADC1_CR2 |= (1 << 0);
+    ADC1_CR2 |= (1 << 30);
+
+    //Channel 0 in SQR3 Sample time in SMPR2 confusing
 }
 
 __attribute__((used)) void main(void){
