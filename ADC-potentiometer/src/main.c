@@ -260,19 +260,23 @@ void adc_init(void){
     RCC_APB2ENR |= (1 << 8);
     RCC_AHB1ENR |= (1 << 0);
 
-    GPIOA_MODER = (1 << 0) | (1 << 1);
+    GPIOA_MODER |= (1 << 0) | (1 << 1);
 
     //12 bit resolution
     ADC1_CR1 &= ~(1 << 25);
     ADC1_CR1 &= ~(1 << 24);
 
-    ADC1_CR2 &= ~(1 << 0);
-    ADC1_SMPR2 |= (0 << 0);
+    ADC1_SQR3 = 0;
+    ADC1_SMPR2 |= (7 << 0);
 
     ADC1_CR2 |= (1 << 0);
-    ADC1_CR2 |= (1 << 30);
+    delay_ms(1);
+}
 
-    //Channel 0 in SQR3 Sample time in SMPR2 confusing
+uint16_t adc_read(void){
+    ADC1_CR2 |= (1 << 30);
+    while(!(ADC1_SR & (1 << 1)));
+    return ADC1_DR;
 }
 
 __attribute__((used)) void main(void){
