@@ -14,6 +14,7 @@ No HAL, no CubeIDE, no abstractions. Direct register manipulation only.
 | [PLL](./PLL/) | USART2 serial transmit and receive at 180MHz via PLL | RCC, FLASH, GPIO, USART2, SysTick |
 [pwm-servo](./pwm-servo/) | Servo control via TIM2 PWM at 50Hz | RCC, FLASH, GPIO, TIM2, USART2, SysTick |
 [I2C-LCD](./I2C-LCD/) | 16x2 LCD over I2C via PCF8574 backpack in 4-bit mode | RCC, FLASH, GPIO, I2C1, USART2, SysTick, DWT |
+| [ADC-potentiometer](./ADC-potentiometer/) | 12-bit ADC potentiometer reading converted to millivolts | RCC, FLASH, GPIO, ADC1, USART2, SysTick |
 
 
 ## Toolchain

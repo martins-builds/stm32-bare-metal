@@ -303,9 +303,9 @@ __attribute__((used)) void main(void){
     //lcd_init();
     while (1)
     {
-        uint16_t val = adc_read();
-        usart_print_number(val);
-        usart_print("\r\n");
+        uint16_t voltage_mv = (adc_read() * 3300UL) / 4095;
+        usart_print_number(voltage_mv);
+        usart_print(" mV\r\n");
         delay_ms(200);
     }
 }
