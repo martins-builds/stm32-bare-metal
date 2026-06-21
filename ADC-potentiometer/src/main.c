@@ -297,10 +297,15 @@ __attribute__((used)) void main(void){
     GPIOA_AFRL |= (7 << 8);   // PA2 = AF7
     GPIOA_AFRL |= (7 << 12);  // PA3 = AF7
 
+    adc_init();
     usart_init();
-    i2c_init();
-    lcd_init();
-    lcd_print("Martins Builds");
-    lcd_set_cursor(1, 0);
-    lcd_print("Embedded Eng");
+    //i2c_init();
+    //lcd_init();
+    while (1)
+    {
+        uint16_t val = adc_read();
+        usart_print_number(val);
+        usart_print("\r\n");
+        delay_ms(200);
+    }
 }
