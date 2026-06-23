@@ -1,5 +1,9 @@
 #include <stdint.h>
 
+//global variables
+volatile uint32_t adc_dma_value = 0;
+
+//systick registers
 #define SYST_CSR  (*(volatile uint32_t*)0XE000E010)
 #define SYST_RVR  (*(volatile uint32_t*)0XE000E014)
 #define SYST_CVR  (*(volatile uint32_t*)0XE000E018)
@@ -289,9 +293,15 @@ uint16_t adc_read(void){
 }
 
 //dma functions
-void dma_adc_init(){
+void dma_adc_init(void){
     RCC_AHB1ENR |= (1 << 22);
 
+    DMA2_S0CR &= ~(1 << 0);//disable stream
+    DMA2_S0PAR = (uint32_t)(ADC1_BASE + 0x4C);  // address of ADC1_DR
+    DMA2_M0AR  = (uint32_t)&adc_dma_value;       // address of your variable
+    DMA2_S0NDTR = 1;
+    DMA2_S0CR |= (1 << 8) | (1 << 11) | (1 << 13);
+    DMA2_S0CR |= (1 << 0);//enable stream
 }
 
 __attribute__((used)) void main(void){
@@ -314,11 +324,12 @@ __attribute__((used)) void main(void){
 
     adc_init();
     usart_init();
+    dma_adc_init();
     //i2c_init();
     //lcd_init();
     while (1)
     {
-        uint16_t voltage_mv = (adc_read() * 3300UL) / 4095;
+        uint16_t voltage_mv = (adc_dma_value * 3300UL) / 4095;
         usart_print_number(voltage_mv);
         usart_print(" mV\r\n");
         delay_ms(200);
