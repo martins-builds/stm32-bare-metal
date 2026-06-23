@@ -14,6 +14,7 @@
 #define LCD_BL       0x08  // backlight bit
 #define ADC1_BASE     0x40012000
 #define ADC_COMMON_BASE  0x40012300   // ADC1_BASE + 0x300
+#define DMA2_BASE    0x40026400
 
 //PINS
 #define RCC_AHB1ENR  (*(volatile uint32_t*)(RCC_BASE   + 0x30))
@@ -50,15 +51,23 @@
 #define I2C_OAR1   (*(volatile uint32_t*)(I2C_BASE + 0x08))
 
 //ADC
-#define RCC_APB2ENR  (*(volatile uint32_t*)(RCC_BASE  + 0x44))
-#define ADC1_CR1     (*(volatile uint32_t*)(ADC1_BASE + 0x04))
-#define ADC1_CR2     (*(volatile uint32_t*)(ADC1_BASE + 0x08))
-#define ADC1_SQR3    (*(volatile uint32_t*)(ADC1_BASE + 0x34))
-#define ADC1_DR      (*(volatile uint32_t*)(ADC1_BASE + 0x4C))
+#define RCC_APB2ENR   (*(volatile uint32_t*)(RCC_BASE  + 0x44))
+#define ADC1_CR1      (*(volatile uint32_t*)(ADC1_BASE + 0x04))
+#define ADC1_CR2      (*(volatile uint32_t*)(ADC1_BASE + 0x08))
+#define ADC1_SQR3     (*(volatile uint32_t*)(ADC1_BASE + 0x34))
+#define ADC1_DR       (*(volatile uint32_t*)(ADC1_BASE + 0x4C))
 #define ADC1_SMPR2    (*(volatile uint32_t*)(ADC1_BASE + 0x10))
 #define ADC1_SR       (*(volatile uint32_t*)(ADC1_BASE + 0x00))
 
 #define ADC_CCR      (*(volatile uint32_t*)(ADC_COMMON_BASE + 0x04))
+
+//DMA Stream 0
+#define DMA2_S0CR    (*(volatile uint32_t*)(DMA2_BASE + 0x010))
+#define DMA2_S0NDTR  (*(volatile uint32_t*)(DMA2_BASE + 0x014))
+#define DMA2_S0PAR   (*(volatile uint32_t*)(DMA2_BASE + 0x018))
+#define DMA2_M0AR    (*(volatile uint32_t*)(DMA2_BASE + 0x01C))
+#define DMA2_LISR    (*(volatile uint32_t*)(DMA2_BASE + 0x000))
+#define DMA2_HISR    (*(volatile uint32_t*)(DMA2_BASE + 0x004))
 
 
 #define DWT_CTRL   (*(volatile uint32_t*)0xE0001000)
@@ -70,7 +79,6 @@ void dwt_init(void){
     DWT_CTRL |= (1 << 0);   // enable cycle counter
     DWT_CYCCNT = 0;
 }
-
 void delay_us(uint32_t us){
     uint32_t start = DWT_CYCCNT;
     uint32_t cycles = us * 180;
@@ -270,6 +278,7 @@ void adc_init(void){
     ADC1_SMPR2 |= (7 << 0);
 
     ADC1_CR2 |= (1 << 0);
+    ADC1_CR2 |= (1 << 1) | (1 << 8);
     delay_ms(1);
 }
 
@@ -277,6 +286,12 @@ uint16_t adc_read(void){
     ADC1_CR2 |= (1 << 30);
     while(!(ADC1_SR & (1 << 1)));
     return ADC1_DR;
+}
+
+//dma functions
+void dma_adc_init(){
+    RCC_AHB1ENR |= (1 << 22);
+
 }
 
 __attribute__((used)) void main(void){
