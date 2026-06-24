@@ -282,7 +282,6 @@ void adc_init(void){
     ADC1_SMPR2 |= (7 << 0);
 
     ADC1_CR2 |= (1 << 0);
-    ADC1_CR2 |= (1 << 1) | (1 << 8);
     delay_ms(1);
 }
 
@@ -303,6 +302,8 @@ void dma_adc_init(void){
     DMA2_S0NDTR = 1;
     DMA2_S0CR |= (1 << 8) | (1 << 11) | (1 << 13);
     DMA2_S0CR |= (1 << 0);//enable stream
+
+    ADC1_CR2 |= (1 << 1) | (1 << 8) | (1 << 9);  // CONT + DMA enable + DDS
 }
 
 __attribute__((used)) void main(void){
@@ -325,14 +326,11 @@ __attribute__((used)) void main(void){
 
     adc_init();
     usart_init();
-    //dma_adc_init();
-    //ADC1_CR2 |= (1 << 30);  // SWSTART — kick off first conversion
-    //i2c_init();
-    //lcd_init();
-    while (1)
-    {
-        usart_print("boot\r\n");
-        uint16_t voltage_mv = (adc_read() * 3300UL) / 4095;
+    dma_adc_init();
+    ADC1_CR2 |= (1 << 30);  // kick first conversion
+
+    while(1){
+        uint16_t voltage_mv = (adc_dma_value * 3300UL) / 4095;
         usart_print_number(voltage_mv);
         usart_print(" mV\r\n");
         delay_ms(200);
