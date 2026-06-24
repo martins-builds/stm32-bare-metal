@@ -1,7 +1,7 @@
 #include <stdint.h>
 
 //global variables
-volatile uint32_t adc_dma_value = 0;
+volatile uint16_t adc_dma_value = 0;
 
 //systick registers
 #define SYST_CSR  (*(volatile uint32_t*)0XE000E010)
@@ -297,6 +297,7 @@ void dma_adc_init(void){
     RCC_AHB1ENR |= (1 << 22);
 
     DMA2_S0CR &= ~(1 << 0);//disable stream
+    while(DMA2_S0CR & (1 << 0));   // wait for disable
     DMA2_S0PAR = (uint32_t)(ADC1_BASE + 0x4C);  // address of ADC1_DR
     DMA2_M0AR  = (uint32_t)&adc_dma_value;       // address of your variable
     DMA2_S0NDTR = 1;
@@ -324,12 +325,14 @@ __attribute__((used)) void main(void){
 
     adc_init();
     usart_init();
-    dma_adc_init();
+    //dma_adc_init();
+    //ADC1_CR2 |= (1 << 30);  // SWSTART — kick off first conversion
     //i2c_init();
     //lcd_init();
     while (1)
     {
-        uint16_t voltage_mv = (adc_dma_value * 3300UL) / 4095;
+        usart_print("boot\r\n");
+        uint16_t voltage_mv = (adc_read() * 3300UL) / 4095;
         usart_print_number(voltage_mv);
         usart_print(" mV\r\n");
         delay_ms(200);
