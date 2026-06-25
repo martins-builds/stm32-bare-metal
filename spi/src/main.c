@@ -22,11 +22,14 @@ volatile uint16_t adc_dma_value = 0;
 #define SPI1_BASE    0x40013000
 
 //PINS
+//port A
 #define RCC_AHB1ENR  (*(volatile uint32_t*)(RCC_BASE   + 0x30))
 #define GPIOA_MODER  (*(volatile uint32_t*)(GPIOA_BASE + 0x00))
 #define GPIOA_ODR    (*(volatile uint32_t*)(GPIOA_BASE + 0x14))
 #define GPIOA_AFRL   (*(volatile uint32_t*)(GPIOA_BASE + 0x20))
+#define GPIOA_OTYPER (*(volatile uint32_t*)(GPIOA_BASE + 0x04))
 
+//port B
 #define GPIOB_MODER  (*(volatile uint32_t*)(GPIOB_BASE + 0x00))
 #define GPIOB_OTYPER (*(volatile uint32_t*)(GPIOB_BASE + 0x04))
 #define GPIOB_OSPEEDR (*(volatile uint32_t*)(GPIOB_BASE + 0x08))
@@ -315,7 +318,25 @@ void dma_adc_init(void){
 
 //spi functions
 void spi_init(void){
+    //clocks
+    RCC_APB2ENR |= (1 << 12);
+    RCC_AHB1ENR |= (1 << 0);
 
+    // PA5 bits 11:10 = 10
+    GPIOA_MODER |= (1 << 11);
+    GPIOA_MODER &= ~(1 << 10);
+    // PA6 bits 13:12 = 10
+    GPIOA_MODER |= (1 << 13);
+    GPIOA_MODER &= ~(1 << 12);
+    // PA7 bits 15:14 = 10
+    GPIOA_MODER |= (1 << 15);
+    GPIOA_MODER &= ~(1 << 14);
+
+    GPIOA_AFRL |= (5 << 20);  // PA5 = AF5
+    GPIOA_AFRL |= (5 << 24);  // PA6 = AF5
+    GPIOA_AFRL |= (5 << 28);  // PA7 = AF5
+
+    GPIOA_OTYPER |= (1 << 4); // PA4 as output
 }
 
 __attribute__((used)) void main(void){
