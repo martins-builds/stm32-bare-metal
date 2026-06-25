@@ -331,12 +331,20 @@ void spi_init(void){
     // PA7 bits 15:14 = 10
     GPIOA_MODER |= (1 << 15);
     GPIOA_MODER &= ~(1 << 14);
+    // PA4 bits 9:18 = 01
+    GPIOA_MODER &= ~(1 << 9);
+    GPIOA_MODER |= (1 << 8);
 
+    GPIOA_AFRL &= ~(0xF << 20); //clear PA5
     GPIOA_AFRL |= (5 << 20);  // PA5 = AF5
+    GPIOA_AFRL &= ~(0xF << 24); //clear PA6
     GPIOA_AFRL |= (5 << 24);  // PA6 = AF5
+    GPIOA_AFRL &= ~(0xF << 28); //clear PA7
     GPIOA_AFRL |= (5 << 28);  // PA7 = AF5
 
-    GPIOA_OTYPER |= (1 << 4); // PA4 as output
+    GPIOA_ODR |= (1 << 4); // PA4 as output
+
+    
 }
 
 __attribute__((used)) void main(void){
