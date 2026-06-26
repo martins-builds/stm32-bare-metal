@@ -366,10 +366,23 @@ void spi_cs_high(void){
 }
 //rc552 functions
 void rc522_write_reg(uint8_t reg, uint8_t val){
-
+    spi_cs_low();
+    spi_transmit_receive((reg << 1) & 0x7E);
+    spi_transmit_receive(val);
+    spi_cs_high();
 }
-void rc522_read_reg(uint8_t reg){
-    
+uint8_t rc522_read_reg(uint8_t reg){
+    spi_cs_low();
+    spi_transmit_receive(((reg << 1) & 0x7E) | 0x80);
+    uint8_t result = spi_transmit_receive(0x00);
+    spi_cs_high();
+    return result;
+}
+void rc522_init(void){
+    rc522_write_reg(0x01, 0x0F);
+    delay_ms(50);
+    uint8_t val = rc522_read_reg(0x37);
+    usart_print_number(val);
 }
 
 __attribute__((used)) void main(void){
