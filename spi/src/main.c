@@ -331,7 +331,7 @@ void spi_init(void){
     // PA7 bits 15:14 = 10
     GPIOA_MODER |= (1 << 15);
     GPIOA_MODER &= ~(1 << 14);
-    // PA4 bits 9:18 = 01
+    // PA4 bits 9:8 = 01
     GPIOA_MODER &= ~(1 << 9);
     GPIOA_MODER |= (1 << 8);
 
@@ -344,7 +344,13 @@ void spi_init(void){
 
     GPIOA_ODR |= (1 << 4); // PA4 as output
 
-    
+    SPI_CR1 &= ~(1 << 0);//phase
+    SPI_CR1 &= ~(1 << 1);//polarity
+    SPI_CR1 |= (1 << 2);//master select
+    SPI_CR1 |= (3 << 3);  // BR = 011 = /16 = 5.625MHz
+    SPI_CR1 |= (1 << 8);//ssi
+    SPI_CR1 |= (1 << 9);//ssm
+    SPI_CR1 |= (1 << 6); //enable spi
 }
 
 __attribute__((used)) void main(void){
