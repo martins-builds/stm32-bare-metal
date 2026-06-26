@@ -352,6 +352,25 @@ void spi_init(void){
     SPI_CR1 |= (1 << 9);//ssm
     SPI_CR1 |= (1 << 6); //enable spi
 }
+uint8_t spi_transmit_receive(uint8_t data){
+    SPI_DR = data;
+    while(!(SPI_SR & (1 << 1)));
+    while(!(SPI_SR & (1 << 0)));
+    return SPI_DR;
+}
+void spi_cs_low(void){
+    GPIOA_ODR &= ~(1 << 4); //low
+}
+void spi_cs_high(void){
+    GPIOA_ODR |= (1 << 4); //high
+}
+//rc552 functions
+void rc522_write_reg(uint8_t reg, uint8_t val){
+
+}
+void rc522_read_reg(uint8_t reg){
+    
+}
 
 __attribute__((used)) void main(void){
     clock_init();
