@@ -406,12 +406,7 @@ __attribute__((used)) void main(void){
     adc_init();
     usart_init();
     dma_adc_init();
-    ADC1_CR2 |= (1 << 30);  // kick first conversion
-
-    while(1){
-        uint16_t voltage_mv = (adc_dma_value * 3300UL) / 4095;
-        usart_print_number(voltage_mv);
-        usart_print(" mV\r\n");
-        delay_ms(200);
-    }
+    //ADC1_CR2 |= (1 << 30);  // kick first conversion
+    spi_init();
+    rc522_init();
 }
