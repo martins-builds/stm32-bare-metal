@@ -154,7 +154,11 @@ void usart_print_number(uint16_t num){
         usart_send(buf[--i]);
     }
 }
-
+void usart_print_hex(uint8_t val){
+    char hex[] = "0123456789ABCDEF";
+    usart_send(hex[val >> 4]);
+    usart_send(hex[val & 0x0F]);
+}
 //clock function
 void clock_init(void){
     FLASH_ACR |= (5 << 0);
@@ -423,7 +427,6 @@ uint8_t rc522_request(void){
     uint8_t recv_len;
     return rc522_transceive(&send, 1, recv, &recv_len);
 }
-
 uint8_t rc522_anticollision(uint8_t *uid){
     rc522_write_reg(0x0D, 0x00);  // normal framing
     uint8_t send[2] = {0x93, 0x20};
@@ -435,6 +438,10 @@ uint8_t rc522_anticollision(uint8_t *uid){
         uid[i] = recv[i];
     }
     return 1;
+}
+uint8_t rc522_read_card_uid(uint8_t *uid){
+    if(!rc522_request()) return 0;
+    return rc522_anticollision(uid);
 }
 
 __attribute__((used)) void main(void){
@@ -461,10 +468,17 @@ __attribute__((used)) void main(void){
     //ADC1_CR2 |= (1 << 30);  // kick first conversion
     spi_init();
     rc522_init();
+    rc522_antenna_on();
     while(1){
-        uint8_t val = rc522_read_reg(0x37);
-        usart_print_number(val);
+        uint8_t uid[4];
+        if(rc522_read_card_uid(uid)){
+            usart_print("UID: ");
+            for(uint8_t i = 0; i < 4; i++){
+                usart_print_hex(uid[i]);
+                usart_send(' ');
+            }
+        }
         usart_print("\r\n");
-        delay_ms(500);
+        delay_ms(1000);
     }
 }
