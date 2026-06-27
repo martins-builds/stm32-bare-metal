@@ -400,7 +400,7 @@ uint8_t rc522_transceive(uint8_t *send_data, uint8_t send_len, uint8_t *recv_dat
         rc522_write_reg(0x09, send_data[i]);//data to fifo
     }
     
-    rc522_write_reg(0x0D, 0x07);
+    rc522_write_reg(0x0D, 0x00);
     rc522_write_reg(0x01, 0x0C);
 
     uint16_t timeout = 2000;
@@ -415,6 +415,26 @@ uint8_t rc522_transceive(uint8_t *send_data, uint8_t send_len, uint8_t *recv_dat
         recv_data[i] = rc522_read_reg(0x09);
     }
     return 1;  // card found
+}
+uint8_t rc522_request(void){
+    rc522_write_reg(0x0D, 0x07);  // 7-bit frame for REQA
+    uint8_t send = 0x26;
+    uint8_t recv[2];
+    uint8_t recv_len;
+    return rc522_transceive(&send, 1, recv, &recv_len);
+}
+
+uint8_t rc522_anticollision(uint8_t *uid){
+    rc522_write_reg(0x0D, 0x00);  // normal framing
+    uint8_t send[2] = {0x93, 0x20};
+    uint8_t recv[5];
+    uint8_t recv_len;
+    if(!rc522_transceive(send, 2, recv, &recv_len)) return 0;
+    // copy 4 UID bytes
+    for(uint8_t i = 0; i < 4; i++){
+        uid[i] = recv[i];
+    }
+    return 1;
 }
 
 __attribute__((used)) void main(void){
