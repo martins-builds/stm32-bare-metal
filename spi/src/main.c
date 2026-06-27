@@ -364,6 +364,7 @@ void spi_cs_low(void){
 void spi_cs_high(void){
     GPIOA_ODR |= (1 << 4); //high
 }
+
 //rc552 functions
 void rc522_write_reg(uint8_t reg, uint8_t val){
     spi_cs_low();
@@ -383,6 +384,37 @@ void rc522_init(void){
     delay_ms(50);
     uint8_t val = rc522_read_reg(0x37);
     usart_print_number(val);
+}
+void rc522_antenna_on(void){
+    uint8_t val = rc522_read_reg(0x14);
+    if((val & 0x03) != 0x03){
+        rc522_write_reg(0x14, val | 0x03);
+    }
+}
+uint8_t rc522_transceive(uint8_t *send_data, uint8_t send_len, uint8_t *recv_data, uint8_t *recv_len){
+    rc522_write_reg(0x04, 0x00);
+    rc522_write_reg(0x0A, 0x80);
+    rc522_write_reg(0x04, 0x7F);//clear interrupt flag
+    for (uint8_t i = 0; i < send_len; i++)
+    {
+        rc522_write_reg(0x09, send_data[i]);//data to fifo
+    }
+    
+    rc522_write_reg(0x0D, 0x07);
+    rc522_write_reg(0x01, 0x0C);
+
+    uint16_t timeout = 2000;
+    while(!(rc522_read_reg(0x04) & ((1 << 5) | (1 << 0)))) {
+        if(--timeout == 0) return 0;  // no card found
+    }
+    if(rc522_read_reg(0x04) & (1 << 0)) return 0;  // TimerIRq = timeout = no card
+
+    // then read FIFO
+    *recv_len = rc522_read_reg(0x0A);
+    for(uint8_t i = 0; i < *recv_len; i++){
+        recv_data[i] = rc522_read_reg(0x09);
+    }
+    return 1;  // card found
 }
 
 __attribute__((used)) void main(void){
@@ -409,4 +441,10 @@ __attribute__((used)) void main(void){
     //ADC1_CR2 |= (1 << 30);  // kick first conversion
     spi_init();
     rc522_init();
+    while(1){
+        uint8_t val = rc522_read_reg(0x37);
+        usart_print_number(val);
+        usart_print("\r\n");
+        delay_ms(500);
+    }
 }
