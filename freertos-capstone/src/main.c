@@ -470,6 +470,7 @@ void display_task(void *pvParameter){
         // LCD row 2 — ADC level
         lcd_set_cursor(1, 0);
         lcd_print("Lvl: ");
+        lcd_print_number(adcval);
 
         if(xQueueReceive(xRfidQueue, uidval, 0) == pdTRUE){
             usart_print("UID: ");
@@ -480,7 +481,12 @@ void display_task(void *pvParameter){
             // LCD row 1 — UID
             lcd_set_cursor(0, 0);
             lcd_print("UID:");
-
+            for(uint8_t i = 0; i < 4; i++){
+                char hex[] = "0123456789ABCDEF";
+                lcd_send_char(hex[uidval[i] >> 4]);
+                lcd_send_char(hex[uidval[i] & 0x0F]);
+                if(i < 3) lcd_send_char(' ');
+            }
         }
         usart_print("\r\n");
         xSemaphoreGive(xUartMutex);
