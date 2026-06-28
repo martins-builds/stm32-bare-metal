@@ -110,7 +110,10 @@ void producer_task(void *pvParameters){
     uint16_t val = 0;
     while (1){
         val++;
+        xSemaphoreTake(xUartMutex, portMAX_DELAY);
+        usart_print("safe output\r\n");
         xQueueSend(xQueue, &val, 0);
+        xSemaphoreGive(xUartMutex);
         vTaskDelay(pdMS_TO_TICKS(200));
     }
 }
@@ -118,8 +121,10 @@ void consumer_task(void *pvParameters){
     while(1){
         uint16_t received;
         xQueueReceive(xQueue, &received, portMAX_DELAY);
+        xSemaphoreTake(xUartMutex, portMAX_DELAY);
         usart_print_number(received);
         usart_print("\r\n");
+        xSemaphoreGive(xUartMutex);
     }
 }
 
