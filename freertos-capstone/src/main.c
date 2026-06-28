@@ -16,7 +16,7 @@ volatile uint16_t adc_dma_value = 0;
 #define USART2_BASE  0x40004400
 #define I2C_BASE     0x40005400
 #define GPIOB_BASE   0x40020400
-#define LCD_ADDR     0x27 
+#define LCD_ADDR     0x27
 #define LCD_BL       0x08  // backlight bit
 #define ADC1_BASE     0x40012000
 #define ADC_COMMON_BASE  0x40012300   // ADC1_BASE + 0x300
