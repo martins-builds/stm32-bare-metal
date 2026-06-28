@@ -1,6 +1,11 @@
 #include<stdlib.h>
 #include "FreeRTOS.h"
 #include "task.h"
+#include "queue.h"
+
+//global variable
+QueueHandle_t xQueue;
+SemaphoreHandle_t xUartMutex;
 
 //REGISTER BASES
 #define RCC_BASE     0x40023800
@@ -101,6 +106,22 @@ void led_task(void *pvParameters){
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
+void producer_task(void *pvParameters){
+    uint16_t val = 0;
+    while (1){
+        val++;
+        xQueueSend(xQueue, &val, 0);
+        vTaskDelay(pdMS_TO_TICKS(200));
+    }
+}
+void consumer_task(void *pvParameters){
+    while(1){
+        uint16_t received;
+        xQueueReceive(xQueue, &received, portMAX_DELAY);
+        usart_print_number(received);
+        usart_print("\r\n");
+    }
+}
 
 __attribute__((used)) void main(void){
     clock_init();
@@ -118,8 +139,10 @@ __attribute__((used)) void main(void){
     GPIOA_AFRL |= (7 << 12);  // PA3 = AF7
 
     usart_init();
-    xTaskCreate(uart_task, "UART", 128, NULL, 1, NULL);
-    xTaskCreate(led_task,  "LED",  128, NULL, 2, NULL);
+    xUartMutex = xSemaphoreCreateMutex();
+    xQueue = xQueueCreate(10, sizeof(uint16_t));  // 10 items, each a uint16_t
+    xTaskCreate(producer_task, "PRODUCER", 128, NULL, 1, NULL);
+    xTaskCreate(consumer_task, "CONSUMER", 128, NULL, 1, NULL);
     vTaskStartScheduler();
     while (1);
 }
