@@ -258,6 +258,21 @@ void lcd_print(const char *str){
         lcd_send_char(*str++);
     }
 }
+void lcd_print_number(uint16_t num){
+    char buf[6];
+    uint8_t i = 0;
+    if (num == 0){
+        lcd_send_char('0');
+        return;
+    }
+    while (num > 0){
+        buf[i++] = '0' + (num % 10);
+        num /= 10;
+    }
+    while (i > 0){
+        lcd_send_char(buf[--i]);
+    }
+}
 void lcd_set_cursor(uint8_t row, uint8_t col){
     uint8_t addr = (row == 0) ? 0x80 + col : 0xC0 + col;
     lcd_send_cmd(addr);
@@ -451,14 +466,21 @@ void display_task(void *pvParameter){
         xSemaphoreTake(xUartMutex, portMAX_DELAY);
         usart_print("ADC: ");
         usart_print_number(adcval);
-        usart_print("\r\n");
+        usart_print("mV\r\n");
+        // LCD row 2 — ADC level
+        lcd_set_cursor(1, 0);
+        lcd_print("Lvl: ");
+
         if(xQueueReceive(xRfidQueue, uidval, 0) == pdTRUE){
+            usart_print("UID: ");
             for(uint8_t i = 0; i < 4; i++){
-                xQueueReceive(xRfidQueue, uidval[i], 0);
-                usart_print("UID: ");
                 usart_print_hex(uidval[i]);
                 usart_send(' ');
             }
+            // LCD row 1 — UID
+            lcd_set_cursor(0, 0);
+            lcd_print("UID:");
+
         }
         usart_print("\r\n");
         xSemaphoreGive(xUartMutex);
