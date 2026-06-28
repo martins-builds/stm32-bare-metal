@@ -8,6 +8,7 @@
 QueueHandle_t xAdcQueue;
 QueueHandle_t xRfidQueue;
 SemaphoreHandle_t xUartMutex;
+volatile uint16_t adc_dma_value = 0;
 
 //REGISTER BASES
 #define RCC_BASE     0x40023800
@@ -15,7 +16,7 @@ SemaphoreHandle_t xUartMutex;
 #define USART2_BASE  0x40004400
 #define I2C_BASE     0x40005400
 #define GPIOB_BASE   0x40020400
-#define LCD_ADDR     0x27
+#define LCD_ADDR     0x27 
 #define LCD_BL       0x08  // backlight bit
 #define ADC1_BASE     0x40012000
 #define ADC_COMMON_BASE  0x40012300   // ADC1_BASE + 0x300
@@ -30,6 +31,12 @@ SemaphoreHandle_t xUartMutex;
 #define GPIOA_ODR    (*(volatile uint32_t*)(GPIOA_BASE + 0x14))
 #define GPIOA_AFRL   (*(volatile uint32_t*)(GPIOA_BASE + 0x20))
 #define GPIOA_OTYPER (*(volatile uint32_t*)(GPIOA_BASE + 0x04))
+
+//port B
+#define GPIOB_MODER  (*(volatile uint32_t*)(GPIOB_BASE + 0x00))
+#define GPIOB_OTYPER (*(volatile uint32_t*)(GPIOB_BASE + 0x04))
+#define GPIOB_OSPEEDR (*(volatile uint32_t*)(GPIOB_BASE + 0x08))
+#define GPIOB_AFRH   (*(volatile uint32_t*)(GPIOB_BASE + 0x24))
 
 //USART
 #define RCC_APB1ENR  (*(volatile uint32_t*)(RCC_BASE    + 0x40))
