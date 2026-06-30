@@ -478,6 +478,7 @@ void display_task(void *pvParameter){
         lcd_set_cursor(1, 0);
         lcd_print("Lvl: ");
         lcd_print_number(adcval);
+        lcd_print("    ");  // pad with spaces to clear leftover digits
 
         if(xQueueReceive(xRfidQueue, uidval, 0) == pdTRUE){
             usart_print("UID: ");
