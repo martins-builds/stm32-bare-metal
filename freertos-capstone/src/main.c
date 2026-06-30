@@ -519,7 +519,7 @@ __attribute__((used)) void main(void){
     usart_init();
     i2c_init();
     lcd_init();
-    spi_init
+    spi_init();
     rc522_init();
     rc522_antenna_on();
     adc_init();
