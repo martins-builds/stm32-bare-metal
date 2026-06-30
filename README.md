@@ -17,12 +17,14 @@ No HAL, no CubeIDE, no abstractions. Direct register manipulation only.
 | [ADC-potentiometer](./ADC-potentiometer/) | 12-bit ADC potentiometer reading converted to millivolts | RCC, FLASH, GPIO, ADC1, USART2, SysTick |
 | [dma-adc](./dma-adc/) | ADC continuous conversion via DMA2 to memory, printed over USART2 | RCC, FLASH, GPIO, ADC1, DMA2, USART2, SysTick |
 | [spi](./spi/) | MFRC522 RFID card UID reader over SPI1 | RCC, FLASH, GPIO, SPI1, USART2, SysTick |
+| [freertos-capstone](./freertos-capstone/) | ADC + RFID + I2C LCD under FreeRTOS, 3 tasks with queues and mutex | RCC, FLASH, GPIO, ADC1, I2C1, SPI1, USART2, FreeRTOS |
 
 
 ## Toolchain
 - arm-none-eabi-gcc
 - st-flash
 - macOS + Homebrew
+- FreeRTOS kernel
 
 ## Key Differences from AVR
 - Clock gating required via RCC before any peripheral works
