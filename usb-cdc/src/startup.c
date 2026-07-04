@@ -6,6 +6,7 @@ extern uint32_t _sdata, _edata, _sidata;
 extern uint32_t _sbss, _ebss;
 
 void SysTick_Handler(void);
+void OTG_FS_IRQHandler(void);
 
 void main(void);
 
@@ -86,4 +87,31 @@ void (*const vector_table[])(void) = {
     Default_Handler,          // 54
     Default_Handler,          // 55
     Default_Handler,     // 56 — IRQ40
+    Default_Handler,          // 57
+    Default_Handler,          // 58
+    Default_Handler,          // 59
+    Default_Handler,          // 60
+    Default_Handler,          // 61
+    Default_Handler,          // 62
+    Default_Handler,          // 63
+    Default_Handler,          // 64
+    Default_Handler,          // 65
+    Default_Handler,          // 66
+    Default_Handler,          // 67
+    Default_Handler,          // 68
+    Default_Handler,          // 69
+    Default_Handler,          // 70
+    Default_Handler,          // 71
+    Default_Handler,          // 72
+    Default_Handler,          // 73
+    Default_Handler,          // 74
+    Default_Handler,          // 75
+    Default_Handler,          // 76
+    Default_Handler,          // 77
+    Default_Handler,          // 78
+    Default_Handler,          // 79
+    Default_Handler,          // 80
+    Default_Handler,          // 81
+    Default_Handler,          // 82
+    OTG_FS_IRQHandler,        // 83 — IRQ67 OTG_FS
 };
