@@ -23,11 +23,6 @@ uint8_t const* tud_descriptor_device_cb(void){
     return (uint8_t const*)&desc_device;
 }
 
-uint8_t const* tud_descriptor_configuration_cb(uint8_t index){
-    (void)index;
-    return desc_configuration;
-}
-
 // remove these CDC defines
 #define CONFIG_TOTAL_LEN  (TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN)
 #define EPNUM_HID         0x81
@@ -47,6 +42,12 @@ uint8_t const desc_configuration[] = {
                        sizeof(desc_hid_report), EPNUM_HID,
                        CFG_TUD_HID_EP_BUFSIZE, 10),
 };
+
+// this goes AFTER the array, not before
+uint8_t const* tud_descriptor_configuration_cb(uint8_t index){
+    (void)index;
+    return desc_configuration;
+}
 
 // string descriptors
 char const* string_desc_arr[] = {
