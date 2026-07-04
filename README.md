@@ -12,8 +12,8 @@ No HAL, no CubeIDE, no abstractions. Direct register manipulation only.
 | [systick](./systick) | Precise 1ms blink using SysTick timer | RCC, GPIO, SysTick |
 | [uart](./uart/) | USART2 serial transmit and receive | RCC, GPIO, USART2, SysTick |
 | [PLL](./PLL/) | USART2 serial transmit and receive at 180MHz via PLL | RCC, FLASH, GPIO, USART2, SysTick |
-[pwm-servo](./pwm-servo/) | Servo control via TIM2 PWM at 50Hz | RCC, FLASH, GPIO, TIM2, USART2, SysTick |
-[I2C-LCD](./I2C-LCD/) | 16x2 LCD over I2C via PCF8574 backpack in 4-bit mode | RCC, FLASH, GPIO, I2C1, USART2, SysTick, DWT |
+| [pwm-servo](./pwm-servo/) | Servo control via TIM2 PWM at 50Hz | RCC, FLASH, GPIO, TIM2, USART2, SysTick |
+| [I2C-LCD](./I2C-LCD/) | 16x2 LCD over I2C via PCF8574 backpack in 4-bit mode | RCC, FLASH, GPIO, I2C1, USART2, SysTick, DWT |
 | [ADC-potentiometer](./ADC-potentiometer/) | 12-bit ADC potentiometer reading converted to millivolts | RCC, FLASH, GPIO, ADC1, USART2, SysTick |
 | [dma-adc](./dma-adc/) | ADC continuous conversion via DMA2 to memory, printed over USART2 | RCC, FLASH, GPIO, ADC1, DMA2, USART2, SysTick |
 | [spi](./spi/) | MFRC522 RFID card UID reader over SPI1 | RCC, FLASH, GPIO, SPI1, USART2, SysTick |
