@@ -18,6 +18,7 @@ No HAL, no CubeIDE, no abstractions. Direct register manipulation only.
 | [dma-adc](./dma-adc/) | ADC continuous conversion via DMA2 to memory, printed over USART2 | RCC, FLASH, GPIO, ADC1, DMA2, USART2, SysTick |
 | [spi](./spi/) | MFRC522 RFID card UID reader over SPI1 | RCC, FLASH, GPIO, SPI1, USART2, SysTick |
 | [freertos-capstone](./freertos-capstone/) | ADC + RFID + I2C LCD under FreeRTOS, 3 tasks with queues and mutex | RCC, FLASH, GPIO, ADC1, I2C1, SPI1, USART2, FreeRTOS |
+| [usb-cdc](./usb-cdc/) | Virtual serial port over USB using TinyUSB CDC class | RCC, FLASH, GPIO, OTG_FS, SysTick, TinyUSB |
 
 
 ## Toolchain

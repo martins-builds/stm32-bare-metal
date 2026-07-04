@@ -9,10 +9,10 @@ C_SOURCES = src/main.c \
             src/usb_descriptors.c \
             $(TUSB)/tusb.c \
             $(TUSB)/device/usbd.c \
-            $(TUSB)/device/usbd_control.c \
             $(TUSB)/class/cdc/cdc_device.c \
             $(TUSB)/portable/synopsys/dwc2/dcd_dwc2.c \
-            $(TUSB)/dwc2_common.c
+            $(TUSB)/common/tusb_fifo.c \
+            $(TUSB)/portable/synopsys/dwc2/dwc2_common.c
 
 INCLUDES = -Isrc \
            -I$(TUSB) \

@@ -5,6 +5,11 @@
 #define GPIOA_BASE  0x40020000
 #define GPIOB_BASE  0x40020400
 #define OTG_FS      0x50000000
+#define USART2_BASE 0x40004400
+
+#define NVIC_ISER2  (*(volatile uint32_t*)0xE000E108)
+uint32_t SystemCoreClock = 168000000UL;  // 168MHz with PLLN=336
+volatile uint32_t tusb_tick = 0;
 
 //PLL
 #define RCC_CR       (*(volatile uint32_t*)(RCC_BASE + 0x00))
@@ -46,6 +51,11 @@
 #define OTG_DCTL      (*(volatile uint32_t*)(OTG_FS  + 0x804))
 #define OTG_DSTS      (*(volatile uint32_t*)(OTG_FS  + 0x808))
 
+// SysTick every 1ms at 168MHz
+#define SYST_RVR  (*(volatile uint32_t*)0xE000E014)
+#define SYST_CVR  (*(volatile uint32_t*)0xE000E018)
+#define SYST_CSR  (*(volatile uint32_t*)0xE000E010)
+
 //clock function for USB CDC
 void clock_init(void){
     FLASH_ACR |= (5 << 0);
@@ -63,7 +73,7 @@ void clock_init(void){
 //start of usart2
 void usart_init(void){
     RCC_APB1ENR |= (1 << 17);  // USART2EN
-    USART_BRR = 45000000 / 9600;  // = 4687
+    USART_BRR = 42000000 / 9600;  // = 4375
     USART_CR1 = (1 << 13) | (1 << 3) | (1 << 2);  // UE, TE, RE
 }
 void usart_send(char data){
@@ -102,12 +112,31 @@ void usart_print_hex(uint8_t val){
     usart_send(hex[val & 0x0F]);
 }
 
+void OTG_FS_IRQHandler(void){
+    tud_int_handler(0);
+}
+// SysTick for TinyUSB timing
+void SysTick_Handler(void){
+    tusb_tick++;
+}
+uint32_t tusb_time_millis_api(void){
+    return tusb_tick;
+}
 
-_attribute__((used)) void main(void){
+// send string over USB CDC
+void cdc_print(const char *str){
+    if(tud_cdc_connected()){
+        tud_cdc_write_str(str);
+        tud_cdc_write_flush();
+    }
+}
+
+__attribute__((used)) void main(void){
     clock_init();
 
-    // enable GPIOA clock
-    RCC_AHB1ENR |= (1 << 0);
+    RCC_AHB1ENR |= (1 << 0); // enable GPIOA clock
+    RCC_AHB2ENR |= (1 << 7); // enable OTG_FS clock
+    NVIC_ISER2 |= (1 << 3);  // enable IRQ67 = OTG_FS
 
     // PA2 bits 5:4 = 10
     GPIOA_MODER |= (1 << 5);
@@ -119,10 +148,26 @@ _attribute__((used)) void main(void){
     GPIOA_AFRL |= (7 << 8);   // PA2 = AF7
     GPIOA_AFRL |= (7 << 12);  // PA3 = AF7
 
-    GPIOA_AFRH |= (10 << 12); // PA11 = AF10
-    GPIOA_AFRH |= (10 << 16); // PA12 = AF10
-    
-    usart_init();
+    // PA11 AF mode
+    GPIOA_MODER |= (1 << 23);
+    GPIOA_MODER &= ~(1 << 22);
+    // PA12 AF mode
+    GPIOA_MODER |= (1 << 25);
+    GPIOA_MODER &= ~(1 << 24);
 
-    while(1);
+    GPIOA_AFRH &= ~(0xF << 12);
+    GPIOA_AFRH |=  (10  << 12);  // PA11 = AF10
+    GPIOA_AFRH &= ~(0xF << 16);
+    GPIOA_AFRH |=  (10  << 16);  // PA12 = AF10
+    
+    //0x0000014C gonna use for nvic
+    usart_init();
+    usart_print("TinyUSB init done\r\n");
+    SYST_RVR = 168000000 / 1000 - 1;
+    SYST_CVR = 0;
+    SYST_CSR = (1 << 0) | (1 << 1) | (1 << 2);
+    tusb_init();
+    while(1){
+        tud_task();
+    }
 }

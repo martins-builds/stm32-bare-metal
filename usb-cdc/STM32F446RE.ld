@@ -1,3 +1,5 @@
+ENTRY(Reset_Handler)
+
 MEMORY
 {
     FLASH (rx)  : ORIGIN = 0x08000000, LENGTH = 512K
@@ -6,20 +8,26 @@ MEMORY
 
 SECTIONS
 {
-    .isr_vector : { *(.isr_vector) } > FLASH
+    .isr_vector : {
+        KEEP(*(.isr_vector))
+    } > FLASH
 
-    .text : { *(.text*) } > FLASH
+    .text : {
+        *(.text*)
+        *(.rodata*)
+    } > FLASH
 
     _sidata = LOADADDR(.data);
-    .data : { 
+    .data : {
         _sdata = .;
-        *(.data*) 
+        *(.data*)
         _edata = .;
     } > RAM AT > FLASH
 
-    .bss : { 
+    .bss : {
         _sbss = .;
-        *(.bss*)  
+        *(.bss*)
+        *(COMMON)
         _ebss = .;
     } > RAM
 

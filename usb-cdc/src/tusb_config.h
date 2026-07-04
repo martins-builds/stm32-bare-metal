@@ -23,4 +23,7 @@
 // endpoint config
 #define CFG_TUD_CDC_EP_NOTIF_SIZE   8
 
+#define CFG_TUSB_RHPORT0_MODE   (OPT_MODE_DEVICE | OPT_MODE_FULL_SPEED)
+#define BOARD_TUD_RHPORT        0
+
 #endif
