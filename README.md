@@ -19,6 +19,7 @@ No HAL, no CubeIDE, no abstractions. Direct register manipulation only.
 | [spi](./spi/) | MFRC522 RFID card UID reader over SPI1 | RCC, FLASH, GPIO, SPI1, USART2, SysTick |
 | [freertos-capstone](./freertos-capstone/) | ADC + RFID + I2C LCD under FreeRTOS, 3 tasks with queues and mutex | RCC, FLASH, GPIO, ADC1, I2C1, SPI1, USART2, FreeRTOS |
 | [usb-cdc](./usb-cdc/) | Virtual serial port over USB using TinyUSB CDC class | RCC, FLASH, GPIO, OTG_FS, SysTick, TinyUSB |
+| [usb-hid](./usb-hid/) | USB HID keyboard — onboard button sends keypress to host | RCC, FLASH, GPIO, OTG_FS, SysTick, TinyUSB |
 
 
 ## Toolchain
