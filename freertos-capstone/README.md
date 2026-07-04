@@ -89,3 +89,15 @@ in this build since card detection is done by polling.
 > ⚠️ ADC and RC522 input max is 3.3V.  and PCF8574 LCD run on 5V.
 
 ## View Output
+screen /dev/tty.usbmodem14103 9600
+To exit screen: Ctrl+A then K
+
+## Flash
+make flash
+
+## Built With
+- arm-none-eabi-gcc
+- st-flash
+- FreeRTOS kernel
+- STM32F446RE reference manual (RM0390)
+- MFRC522 datasheet
