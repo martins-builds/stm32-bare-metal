@@ -1,76 +1,69 @@
-# USB CDC (TinyUSB)
+# USB HID Keyboard
 
-STM32F446RE appearing as a virtual serial port over USB, using TinyUSB
-for enumeration and CDC class handling. Bare-metal clock, GPIO, NVIC,
-and SysTick configuration — TinyUSB handles the USB stack.
-Debug output also available over USART2.
+STM32F446RE enumerating as a USB HID keyboard. Pressing the onboard
+button on PC13 sends the letter 'H' to the host. No HAL — bare-metal
+clock, GPIO, NVIC, and SysTick. TinyUSB handles HID class descriptors
+and report handling.
 
 ## How It Works
 
-### Why the PLL changed
+### USB HID vs USB CDC
 
-Previous projects ran SYSCLK at 180MHz via PLLN=360. USB requires
-a strict 48MHz clock on the OTG_FS peripheral. The 48MHz clock comes
-from the main PLL via the PLLQ divider:
-USB clock = (HSE / PLLM) × PLLN / PLLQ
-= (8MHz / 8)   × 336  / 7
-= 1MHz × 336 / 7
-= 48MHz ✓
+CDC makes the device appear as a serial port — data flows as a stream.
+HID makes the device appear as an input device (keyboard, mouse,
+gamepad). The host reads structured reports instead of raw bytes.
+Each keypress is a report containing modifier keys and up to 6
+simultaneous keycodes.
 
-SYSCLK changes as a result:
-SYSCLK = (HSE / PLLM) × PLLN / PLLP
-= 1MHz × 336 / 2
-= 168MHz
+### Button to Keypress Flow
+PC13 button pressed (active low)
+→ tud_hid_keyboard_report(0, 0, keys)  // send 'H'
+→ wait for button release
+→ tud_hid_keyboard_report(0, 0, no_keys)  // send release
+The release report is required — without it the host treats the key
+as held indefinitely.
 
-| Parameter | Previous projects | This project |
-|-----------|------------------|--------------|
-| PLLN | 360 | 336 |
-| PLLQ | — | 7 |
-| SYSCLK | 180MHz | 168MHz |
-| USB clock | — | 48MHz |
-| APB1 | 45MHz | 42MHz |
-| APB2 | 90MHz | 84MHz |
-
-### USB GPIO
-
-PA11 (D−) and PA12 (D+) configured as alternate function 10 (OTG_FS).
-Both set to alternate function mode (MODER = 10) via GPIOA_AFRH.
-
-### OTG_FS Interrupt
-
-OTG_FS is IRQ67. It sits in NVIC_ISER2, bit 3 (67 − 64 = 3).
-`OTG_FS_IRQHandler` routes directly to `tud_int_handler(0)`.
-
-### TinyUSB
-
-TinyUSB handles USB enumeration, CDC class descriptors, FIFO
-management, and data transfer. The application layer only needs:
+### HID Report Format
 
 ```c
-tusb_init();        // initialize the stack
-tud_task();         // call in main loop — processes USB events
-tud_cdc_connected() // check if host has opened the port
-tud_cdc_write_str() // send string to host
-tud_cdc_write_flush()
+uint8_t keys[6] = {HID_KEY_H, 0, 0, 0, 0, 0};
+tud_hid_keyboard_report(0, 0, keys);
+//                       ^  ^
+//                       |  modifier byte (shift, ctrl, alt)
+//                       report ID
 ```
 
-### SysTick
+Up to 6 simultaneous keys per report. Modifier byte handles Shift,
+Ctrl, Alt etc. Both set to 0 here — plain 'h' with no modifiers.
 
-SysTick configured at 168MHz for 1ms ticks. `tusb_time_millis_api()`
-returns `tusb_tick` — required by TinyUSB for internal timing.
+### HID Callbacks
 
-### USART2
+TinyUSB requires two callbacks even if unused:
 
-Kept for debug output at 9600 baud. APB1 = 42MHz at 168MHz SYSCLK.
-USART_BRR = 42000000 / 9600 = 4375
+```c
+tud_hid_set_report_cb()  // host→device reports (LEDs, etc) — stubbed
+tud_hid_get_report_cb()  // host requests a report — stubbed, returns 0
+```
+
+### Clock and USB — Same as USB CDC
+
+PLLN=336, PLLQ=7 → 48MHz USB clock. SYSCLK = 168MHz.
+PA11 (D−) and PA12 (D+) both AF10. OTG_FS IRQ67 via NVIC_ISER2 bit 3.
+
+### PC13 Button
+
+PC13 is the onboard blue user button on the Nucleo-64. Configured
+with internal pull-up (PUPDR bits 27:26 = 01). Active low — reads 0
+when pressed, 1 when released. MODER left at reset default (00 = input).
 
 ## Peripherals Used
-- **RCC** — PLL at 168MHz, PLLQ=7 for 48MHz USB clock, GPIOA (AHB1), OTG_FS (AHB2), USART2 (APB1)
+- **RCC** — PLL at 168MHz, PLLQ=7 for 48MHz USB, GPIOA/GPIOC (AHB1), OTG_FS (AHB2), USART2 (APB1)
 - **FLASH** — 5 wait states, instruction cache, data cache, prefetch
-- **GPIO** — PA11 AF10 (D−), PA12 AF10 (D+), PA2 AF7 (USART2 TX), PA3 AF7 (USART2 RX)
+- **GPIO** — PC13 input pull-up (button), PA11 AF10 (D−), PA12 AF10 (D+), PA2 AF7 (USART2 TX), PA3 AF7 (USART2 RX)
 - **OTG_FS** — full-speed USB device, IRQ67
 - **SysTick** — 1ms tick for TinyUSB timing
-- **TinyUSB** — USB stack, CDC class, enumeration, FIFO
+- **USART2** — 9600 baud debug output, BRR = 42000000/9600 = 4375
+- **TinyUSB** — USB stack, HID keyboard class, report handling
 
 ## Wiring
 
@@ -78,14 +71,17 @@ USART_BRR = 42000000 / 9600 = 4375
 |-----|------------|
 | PA11 | USB D− |
 | PA12 | USB D+ |
+| PC13 | Onboard blue button (no wiring needed) |
 | PA2 | Onboard ST-Link (USART2 TX) |
 | PA3 | Onboard ST-Link (USART2 RX) |
 
 Connect a USB cable from the STM32 USB connector (not ST-Link) to
-your computer. The board will enumerate as a virtual serial port.
+your computer. The board enumerates as a HID keyboard. Press the
+blue button to type 'H'.
 
-## View USB Output
-screen /dev/tty.usbmodem<id> 115200
+## Note
+USB enumeration untested — no hardware available to connect PA11/PA12.
+USART2 debug output confirmed working. Logic verified correct.
 
 ## View USART Debug Output
 screen /dev/tty.usbmodem14103 9600
